@@ -1,5 +1,9 @@
 pragma solidity ^0.4.24;
 
+contract AlienContract {
+    function onERC721Received(address, address, uint256, string) public;
+}
+
 contract StarsList {
     
     uint256 starID;
@@ -34,6 +38,20 @@ contract StarsList {
         emit transfer(msg.sender, _to, _starID);
     }
     
+    function safeTransferFrom(address _from, address _to, uint256 _starID) public {
+        require(Stars[_starID].starOwner == msg.sender);
+        require(Stars[_starID].starOwner != _to);
+        require(starCount >= starID);
+        require(isContract(_to) == true);
+        AlienContract AlCont = AlienContract(_to);
+        AlCont.onERC721Received(_from, _to, _starID, "");
+        
+        require(Stars[_starID].starOwner == msg.sender);
+        Stars[_starID].starOwner = _to;
+        
+        emit transfer(msg.sender, _to, _starID);
+    }
+    
     function ChangeStarColor(uint256 _starID, string _starColor) public returns (bool) {
         require(Stars[_starID].starOwner == msg.sender);
         Stars[_starID].starColor = _starColor; 
@@ -49,5 +67,11 @@ contract StarsList {
         emit changeName(_starID, _starName);
         return true;
     }
+    
+    function isContract(address addr) public view returns (bool) {
+        uint size;
+        assembly { size := extcodesize(addr) }
+        return size > 0;
+}
     
 }
